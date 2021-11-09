@@ -1,7 +1,16 @@
+/**
+ * 
+ */
 package it.unibo.oop.lab.collections2;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 
@@ -14,35 +23,31 @@ import java.util.List;
  * included in the comments below.
  * 
  * @param <U>
- *            Specific user type
+ *            Specific {@link User} type
  */
 public class SocialNetworkUserImpl<U extends User> extends UserImpl implements SocialNetworkUser<U> {
 
-    /*
-     * 
-     * [FIELDS]
-     * 
-     * Define any necessary field
-     * 
-     * In order to save the people followed by a user organized in groups, adopt
-     * a generic-type Map:
-     * 
-     * think of what type of keys and values would best suit the requirements
-     */
-
-    /*
-     * [CONSTRUCTORS]
-     * 
-     * 1) Complete the definition of the constructor below, for building a user
-     * participating in a social network, with 4 parameters, initializing:
-     * 
-     * - firstName - lastName - username - age and every other necessary field
-     * 
-     * 2) Define a further constructor where age is defaulted to -1
-     */
+    private final Map<String, Set<U>> friends;
 
     /**
-     * Builds a new {@link SocialNetworkUserImpl}.
+     * Builds a user participating is a social network (age won't be set).
+     * 
+     * 
+     * @param firstName
+     *            the user firstname
+     * @param lastName
+     *            the user lastname
+     * @param username
+     *            alias of the user, i.e. the way a user is identified on an
+     *            application
+     */
+    public SocialNetworkUserImpl(final String firstName, final String lastName, final String username) {
+        this(firstName, lastName, username, -1);
+
+    }
+
+    /**
+     * Builds a user participating in a social network.
      * 
      * @param name
      *            the user firstname
@@ -56,27 +61,51 @@ public class SocialNetworkUserImpl<U extends User> extends UserImpl implements S
      */
     public SocialNetworkUserImpl(final String name, final String surname, final String user, final int userAge) {
         super(name, surname, user, userAge);
+        this.friends = new HashMap<>(); // inference of type variables
     }
 
-    /*
-     * [METHODS]
-     * 
-     * Implements the methods below
+    /**
+     * {@inheritDoc}
      */
-
-    @Override
     public boolean addFollowedUser(final String circle, final U user) {
-        return false;
+        Set<U> circleFriends = this.friends.get(circle);
+        if (circleFriends == null) {
+            circleFriends = new HashSet<>();
+            this.friends.put(circle, circleFriends);
+        }
+        return circleFriends.add(user);
     }
 
-    @Override
+    /**
+     *
+     * [NOTE] If no group with groupName exists yet, this implementation must
+     * return an empty Collection.
+     * 
+     * {@inheritDoc}
+     */
     public Collection<U> getFollowedUsersInGroup(final String groupName) {
-        return null;
+        final Collection<U> usersInCircle = this.friends.get(groupName);
+        if (usersInCircle != null) {
+            return new ArrayList<>(usersInCircle);
+        }
+        /*
+         * Return a very fast, unmodifiable, pre-cached empty list.
+         */
+        return Collections.emptyList();
     }
 
-    @Override
+    /**
+     * {@inheritDoc}
+     */
     public List<U> getFollowedUsers() {
-        return null;
+        /*
+         * Pre-populate a Set in order to prevent duplicates
+         */
+        final Set<U> followedUsers = new HashSet<>();
+        for (final Set<U> group : friends.values()) {
+            followedUsers.addAll(group);
+        }
+        return new ArrayList<>(followedUsers);
     }
 
 }
